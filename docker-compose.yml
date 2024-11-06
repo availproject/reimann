@@ -1,0 +1,45 @@
+name: reimann
+
+networks:
+  reth:
+    driver: bridge
+
+services:
+  base:
+    image: ghcr.io/paradigmxyz/reth:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/base
+    networks:
+      - reth
+    command: node
+  chain-1:
+    image: ghcr.io/paradigmxyz/reth:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/chain-1
+    networks:
+      - reth
+    depends_on:
+      - base
+    command: node
+  chain-2:
+    image: ghcr.io/paradigmxyz/reth:latest
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/chain-2
+    networks:
+      - reth
+    depends_on:
+      - base
+      - chain-1
+    command: node
