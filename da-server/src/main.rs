@@ -1,52 +1,69 @@
-use axum::{
-    body::Bytes, extract::State, http::StatusCode, response::{IntoResponse, Json}, routing::{get, put}, Router
-};
-use serde_json::{Value, json};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_s3::{config::Region, Client};
-use uuid::Uuid;
-use dotenvy::dotenv;
+use axum::{
+    body::Bytes,
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Json},
+    routing::{get, put},
+    Router,
+};
+use serde_json::json;
 use std::sync::Arc;
+use uuid::Uuid;
 
 struct AppState {
     s3_client: Client,
-    s3_bucket_name: String
+    s3_bucket_name: String,
 }
 
 async fn root() -> impl IntoResponse {
-    return (StatusCode::OK, Json(json!({
-        "name": "Fast DA Server",
-        "success": "true"
-    })));
+    (
+        StatusCode::OK,
+        Json(json!({
+            "name": "Fast DA Server",
+            "success": "true"
+        })),
+    )
 }
 
 async fn submit(state: State<Arc<AppState>>, data: Bytes) -> impl IntoResponse {
-    println!("Received data: {:?}", data);
-    if data.len() == 0 {
-        return (StatusCode::BAD_REQUEST, Json(json!({
-            "error": "No data provided",
-            "success": "false"
-        })))
+    if data.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": "No data provided",
+                "success": "false"
+            })),
+        );
     }
     let body = aws_sdk_s3::primitives::ByteStream::from(data);
-    match state.s3_client
+    match state
+        .s3_client
         .put_object()
         .bucket(&state.s3_bucket_name)
         .key(Uuid::new_v4().to_string())
         .body(body)
         .send()
-        .await {
+        .await
+    {
         Ok(_) => {
-            return (StatusCode::CREATED, Json(json!({
-                "success": "true"
-            })))
-        },
-        Err(_) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({
-                "success": "false"
-            })))
+            (
+                StatusCode::CREATED,
+                Json(json!({
+                    "success": "true"
+                })),
+            )
         }
-    };
+        Err(_) => {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "success": "false"
+                })),
+            )
+        }
+    }
 }
 
 #[tokio::main]
