@@ -5,7 +5,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Json},
-    routing::{get, put},
+    routing::{get, post},
     Router,
 };
 use serde_json::json;
@@ -28,6 +28,7 @@ async fn root() -> impl IntoResponse {
 }
 
 async fn submit(state: State<Arc<AppState>>, data: Bytes) -> impl IntoResponse {
+    println!("Received data");
     if data.is_empty() {
         return (
             StatusCode::BAD_REQUEST,
@@ -48,6 +49,7 @@ async fn submit(state: State<Arc<AppState>>, data: Bytes) -> impl IntoResponse {
         .await
     {
         Ok(_) => {
+            println!("Uploaded to S3");
             (
                 StatusCode::CREATED,
                 Json(json!({
@@ -80,11 +82,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // build our application with a single route
     let app = Router::new()
         .route("/", get(root))
-        .route("/submit", put(submit))
+        .route("/submit", post(submit))
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
     Ok(())
 }
