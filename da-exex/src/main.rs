@@ -1,16 +1,19 @@
-use futures::{Future, TryStreamExt};
 use alloy_rlp::Encodable;
-use reth::revm::primitives::{bytes::BytesMut};
+use bytes::Bytes;
+use futures::{Future, TryStreamExt};
+use futures_util::FutureExt;
+use reth::revm::primitives::bytes::BytesMut;
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_api::FullNodeComponents;
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
-use std::{
-    collections::VecDeque, pin::Pin, task::{ready, Context, Poll}, time::Duration
-};
-use futures_util::{FutureExt};
 use std::sync::Arc;
-use bytes::Bytes;
+use std::{
+    collections::VecDeque,
+    pin::Pin,
+    task::{ready, Context, Poll},
+    time::Duration,
+};
 
 struct DAExEx<Node: FullNodeComponents> {
     /// The context of the ExEx
@@ -18,7 +21,8 @@ struct DAExEx<Node: FullNodeComponents> {
     /// Execution outcome of the chain
     api_client: Arc<reqwest::Client>,
     api_url: String,
-    pending_request: Option<Pin<Box<dyn Future<Output = reqwest::Result<reqwest::Response>> + Send>>>,
+    pending_request:
+        Option<Pin<Box<dyn Future<Output = reqwest::Result<reqwest::Response>> + Send>>>,
     data_queue: VecDeque<Bytes>,
 }
 
@@ -28,24 +32,26 @@ impl<Node: FullNodeComponents> DAExEx<Node> {
         dotenvy::dotenv().unwrap();
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
-            .build().unwrap();
-        Self { ctx, api_client: Arc::new(client), api_url: dotenvy::var("DA_SERVER_URL").unwrap(), pending_request: None, data_queue: VecDeque::new() }
+            .build()
+            .unwrap();
+        Self {
+            ctx,
+            api_client: Arc::new(client),
+            api_url: dotenvy::var("DA_SERVER_URL").unwrap(),
+            pending_request: None,
+            data_queue: VecDeque::new(),
+        }
     }
 
-        /// Try to start a new request if there isn't one pending
-        fn try_start_request(&mut self) {
-            if self.pending_request.is_none() && !self.data_queue.is_empty() {
-                if let Some(data) = self.data_queue.pop_front() {
-                    let future = Box::pin(
-                        self.api_client
-                            .post(&self.api_url)
-                            .body(data)
-                            .send()
-                    );
-                    self.pending_request = Some(future);
-                }
+    /// Try to start a new request if there isn't one pending
+    fn try_start_request(&mut self) {
+        if self.pending_request.is_none() && !self.data_queue.is_empty() {
+            if let Some(data) = self.data_queue.pop_front() {
+                let future = Box::pin(self.api_client.post(&self.api_url).body(data).send());
+                self.pending_request = Some(future);
             }
         }
+    }
 }
 
 impl<Node: FullNodeComponents + Unpin> Future for DAExEx<Node> {
@@ -91,7 +97,8 @@ impl<Node: FullNodeComponents + Unpin> Future for DAExEx<Node> {
                 let transactions = committed_chain
                     .blocks()
                     .values()
-                    .flat_map(|block| block.body.transactions()).collect::<Vec<_>>();
+                    .flat_map(|block| block.body.transactions())
+                    .collect::<Vec<_>>();
                 if !transactions.is_empty() {
                     let mut bytes_arr: BytesMut = BytesMut::new();
                     for tx in transactions {

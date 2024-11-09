@@ -57,14 +57,12 @@ async fn submit(state: State<Arc<AppState>>, data: Bytes) -> impl IntoResponse {
                 })),
             )
         }
-        Err(_) => {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({
-                    "success": "false"
-                })),
-            )
-        }
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({
+                "success": "false"
+            })),
+        ),
     }
 }
 
@@ -86,7 +84,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+        .await
+        .unwrap();
     axum::serve(listener, app).await.unwrap();
     Ok(())
 }
