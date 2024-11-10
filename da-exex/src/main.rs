@@ -100,6 +100,10 @@ impl<Node: FullNodeComponents + Unpin> Future for DAExEx<Node> {
                     .flat_map(|block| block.body.transactions())
                     .collect::<Vec<_>>();
                 if !transactions.is_empty() {
+                    info!(
+                        transactions = transactions.len(),
+                        "Processing committed blocks"
+                    );
                     let mut bytes_arr: BytesMut = BytesMut::new();
                     for tx in transactions {
                         let mut bytes = BytesMut::new();
