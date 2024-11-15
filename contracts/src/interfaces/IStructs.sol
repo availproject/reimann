@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.28;
 
+import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+
 struct OnchainCrossChainOrder {
     /// @dev The timestamp by which the order must be filled on the destination chain
     uint32 fillDeadline;
@@ -18,9 +20,9 @@ struct ERC20CrossChainOrder {
     /// @dev Destination chain id
     uint32 destination;
     /// @dev Token address to be sent on the source chain
-    address tokenIn;
+    IERC20 tokenIn;
     /// @dev Token address to be received on the destination chain
-    address tokenOut;
+    IERC20 tokenOut;
     /// @dev The address of the user that will send the tokens on the source chain
     address sender;
     /// @dev The address of the user that will receive the tokens on the destination chain
@@ -31,6 +33,15 @@ struct ERC20CrossChainOrder {
     uint256 amountOutMin;
     /// @dev Nonce of the order
     uint256 nonce;
+}
+
+struct EscrowInfo {
+    /// @dev The address of the user that will send the tokens on the source chain
+    address sender;
+    /// @dev The address of the token locked
+    IERC20 token;
+    /// @dev The amount of tokens locked
+    uint256 amount;
 }
 
 enum OrderStatus {

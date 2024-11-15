@@ -6,3 +6,4 @@ error OrderExpired(bytes32 orderHash);
 error OrderPendingOrFulfilled(bytes32 orderHash);
 error OrderAlreadyFulfilled(bytes32 orderHash);
 error OrderNotFulfilled(bytes32 orderHash);
+error RollupAlreadyExists(uint32 chainId);
