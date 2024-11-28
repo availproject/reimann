@@ -21,35 +21,39 @@ async fn root() -> impl IntoResponse {
     (
         StatusCode::OK,
         Json(json!({
-            "name": "Fast DA Server",
+            "name": "Quick DA Server",
             "success": "true"
         })),
     )
 }
 
+#[inline]
 async fn submit(state: State<Arc<AppState>>, data: Bytes) -> impl IntoResponse {
-    println!("Received data");
+    let start = std::time::Instant::now();
+    println!("Received data of length: {}", data.len());
     if data.is_empty() {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({
-                "error": "No data provided",
-                "success": "false"
+                "success": "false",
+                "error": "Empty data",
             })),
         );
     }
+    let uuid = Uuid::new_v4();
     let body = aws_sdk_s3::primitives::ByteStream::from(data);
     match state
         .s3_client
         .put_object()
         .bucket(&state.s3_bucket_name)
-        .key(Uuid::new_v4().to_string())
+        .key(uuid)
         .body(body)
         .send()
         .await
     {
         Ok(_) => {
-            println!("Uploaded to S3");
+            let elapsed = start.elapsed().as_secs_f64();
+            println!("📤 Uploaded to S3 with UUID: {} in {}s", uuid, elapsed);
             (
                 StatusCode::CREATED,
                 Json(json!({
