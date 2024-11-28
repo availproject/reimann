@@ -41,7 +41,9 @@ async fn add(state: State<Arc<RwLock<AppState>>>, data: Bytes) -> impl IntoRespo
         }
     };
     let mut state = state.write();
+    let start = std::time::Instant::now();
     state.tree.append(node);
+    println!("📥 Appended to SMT in {}s", start.elapsed().as_secs_f64());
     (
         StatusCode::OK,
         Json(json!({
@@ -56,7 +58,9 @@ async fn add(state: State<Arc<RwLock<AppState>>>, data: Bytes) -> impl IntoRespo
 async fn query(state: State<Arc<RwLock<AppState>>>, Path(index): Path<u32>) -> impl IntoResponse {
     let state = state.read();
     let root = state.tree.root();
-    let proof = state.tree.generate_proof(index.try_into().unwrap());
+    let start = std::time::Instant::now();
+    let proof = state.tree.generate_proof(index);
+    println!("🔍 Generated proof in {}s", start.elapsed().as_secs_f64());
     (
         StatusCode::OK,
         Json(json!({

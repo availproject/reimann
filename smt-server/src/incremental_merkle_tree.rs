@@ -65,7 +65,7 @@ impl MerkleTree {
     }
 
     #[inline]
-    pub fn generate_proof(&self, index: usize) -> Vec<B256> {
+    pub fn generate_proof(&self, index: u32) -> Vec<B256> {
         let mut proof = Vec::with_capacity(self.height);
         let mut current_index = index;
 
@@ -76,8 +76,8 @@ impl MerkleTree {
                 current_index + 1
             };
 
-            let sibling = if current_index < self.tree[i].len() {
-                self.tree[i][current_index]
+            let sibling = if current_index < self.tree[i].len() as u32 {
+                self.tree[i][current_index as usize]
             } else {
                 self.zero_hashes[i]
             };
@@ -101,7 +101,7 @@ impl MerkleTree {
 
     #[allow(dead_code)]
     #[inline]
-    pub fn verify_proof(leaf: B256, index: usize, root: B256, proof: Vec<B256>) -> bool {
+    pub fn verify_proof(leaf: B256, index: u32, root: B256, proof: Vec<B256>) -> bool {
         let mut current = leaf;
         let mut current_index = index;
 
@@ -183,8 +183,8 @@ mod tests {
 
         // Verify all proofs
         for (i, leaf) in leaves.iter().enumerate() {
-            let proof = tree.generate_proof(i);
-            assert!(MerkleTree::verify_proof(*leaf, i, root, proof));
+            let proof = tree.generate_proof(i as u32);
+            assert!(MerkleTree::verify_proof(*leaf, i as u32, root, proof));
         }
     }
 
@@ -237,9 +237,14 @@ mod tests {
         // Verify all historical roots still validate against their respective proofs
         for i in 0..10 {
             let leaf = leaves[i]; // Use stored leaf instead of creating new one
-            let proof = tree.generate_proof(i);
-            assert!(MerkleTree::verify_proof(leaf, i, prev_root, proof.clone()));
-            assert!(!MerkleTree::verify_proof(leaf, i, roots[i], proof));
+            let proof = tree.generate_proof(i as u32);
+            assert!(MerkleTree::verify_proof(
+                leaf,
+                i as u32,
+                prev_root,
+                proof.clone()
+            ));
+            assert!(!MerkleTree::verify_proof(leaf, i as u32, roots[i], proof));
         }
     }
 
@@ -257,9 +262,9 @@ mod tests {
 
         // All proofs should be valid
         for (i, &leaf) in leaves.iter().enumerate() {
-            let proof = tree.generate_proof(i);
+            let proof = tree.generate_proof(i as u32);
             assert_eq!(proof.len(), 3, "Proof length should match tree height");
-            assert!(MerkleTree::verify_proof(leaf, i, root, proof));
+            assert!(MerkleTree::verify_proof(leaf, i as u32, root, proof));
         }
     }
 
@@ -320,9 +325,9 @@ mod tests {
 
             // Verify all leaves up to now
             for (j, &prev_leaf) in leaves.iter().enumerate() {
-                let proof = tree.generate_proof(j);
+                let proof = tree.generate_proof(j as u32);
                 assert!(
-                    MerkleTree::verify_proof(prev_leaf, j, new_root, proof),
+                    MerkleTree::verify_proof(prev_leaf, j as u32, new_root, proof),
                     "Failed to verify leaf {} after adding leaf {}",
                     j,
                     i
@@ -366,10 +371,10 @@ mod tests {
 
             // Verify all previous leaves with latest root
             for (j, &prev_leaf) in leaves.iter().enumerate() {
-                let proof = tree.generate_proof(j);
+                let proof = tree.generate_proof(j as u32);
                 assert_eq!(proof.len(), 32, "Proof length should be 32");
                 assert!(
-                    MerkleTree::verify_proof(prev_leaf, j, new_root, proof),
+                    MerkleTree::verify_proof(prev_leaf, j as u32, new_root, proof),
                     "Failed to verify leaf {} after adding leaf {}",
                     j,
                     i
@@ -393,10 +398,10 @@ mod tests {
         // Verify all proofs one final time
         let final_root = tree.root();
         for (i, &leaf) in leaves.iter().enumerate() {
-            let proof = tree.generate_proof(i);
+            let proof = tree.generate_proof(i as u32);
             assert_eq!(proof.len(), 32, "Final proof length should be 32");
             assert!(
-                MerkleTree::verify_proof(leaf, i, final_root, proof),
+                MerkleTree::verify_proof(leaf, i as u32, final_root, proof),
                 "Failed to verify leaf {} against final root",
                 i
             );
