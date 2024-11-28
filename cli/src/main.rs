@@ -447,7 +447,7 @@ async fn update_nexus_order_root(
         .await?;
 
     println!(
-        "⬆️  Updated order root {} for chain {} on NexusSettler {}",
+        "⬆️ Updated order root {} for chain {} on NexusSettler {}",
         root,
         chain_id,
         *settler.address()
@@ -477,7 +477,7 @@ async fn update_rollup_order_root(
         .await?;
 
     println!(
-        "⬆️  Updated order root {} for chain {} on RollupSettler {}",
+        "⬆️ Updated order root {} for chain {} on RollupSettler {}",
         root,
         chain_id,
         *settler.address()
@@ -635,10 +635,10 @@ async fn test_full_init() -> Result<()> {
     )
     .await?;
 
-    let elapsed = start.elapsed();
+    let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
     println!(
         "✅ Full initialization completed successfully in {}s",
-        elapsed.as_secs_f64()
+        elapsed
     );
     Ok(())
 }
@@ -745,11 +745,11 @@ async fn test_full_run() -> Result<()> {
         nonce, // rollup1 chain id
     )
     .await?;
-    let elapsed = start.elapsed();
 
+    let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
     println!(
         "✅ Full run test completed successfully in {}s",
-        elapsed.as_secs_f64()
+        elapsed
     );
     Ok(())
 }
@@ -968,10 +968,10 @@ async fn test_transfers(count: u32, rpc: &str, amount: f64) -> Result<()> {
         futures.push(provider.send_transaction(tx).await?.register());
     }
     join_all(futures).await;
-    let elapsed = start.elapsed();
+    let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
     println!(
-        "✅ All transfer requests completed, time elapsed: {}s",
-        elapsed.as_secs_f64()
+        "✅ All transfer requests completed in {}s",
+        elapsed
     );
 
     Ok(())
