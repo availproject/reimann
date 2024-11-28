@@ -14,11 +14,11 @@ struct OnchainCrossChainOrder {
     bytes orderData;
 }
     
-struct ERC20CrossChainOrder {
+struct ERC20BridgeOrder {
     /// @dev Source chain id
-    uint32 source;
+    uint256 source;
     /// @dev Destination chain id
-    uint32 destination;
+    uint256 destination;
     /// @dev Token address to be sent on the source chain
     IERC20 tokenIn;
     /// @dev Token address to be received on the destination chain
@@ -32,7 +32,30 @@ struct ERC20CrossChainOrder {
     /// @dev The minimum amount of tokens to be received on the destination chain
     uint256 amountOutMin;
     /// @dev Nonce of the order
-    uint256 nonce;
+    uint32 nonce;
+}
+
+struct FillerInfo {
+    /// @dev Source chain id
+    uint256 source;
+    /// @dev Destination chain id
+    uint256 destination;
+    /// @dev Token address to be sent on the source chain
+    IERC20 tokenIn;
+    /// @dev Token address to be received on the destination chain
+    IERC20 tokenOut;
+    /// @dev The address of the user that will send the tokens on the source chain
+    address sender;
+    /// @dev The address of the user that will receive the tokens on the destination chain
+    address recipient;
+    /// @dev The amount of tokens to be sent on the source chain
+    uint256 amountIn;
+    /// @dev The minimum amount of tokens to be received on the destination chain
+    uint256 amountOutMin;
+    /// @dev Nonce of the order
+    uint32 nonce;
+    /// @dev Filler address on source chain
+    address filler;
 }
 
 struct EscrowInfo {
