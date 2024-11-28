@@ -1,5 +1,5 @@
 [workspace]
-members = ["cli", "da-exex", "da-server"]
+members = ["cli", "da-exex", "da-server", "smt-server"]
 resolver = "2"
 
 [workspace.package]
@@ -29,21 +29,28 @@ reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth" }
 reth-tracing = { git = "https://github.com/paradigmxyz/reth" }
 
 # alloy
-alloy-eips = { version = "0.5.4", default-features = false }
-alloy-consensus = { version = "0.5.4", default-features = false }
-alloy-primitives = { version = "0.8.9", default-features = false }
-alloy-rlp = "0.3.4"
-alloy-rpc-types = { version = "0.5.4", features = [
+alloy = { version = "0.6", features = ["full"] }
+alloy-eips = { version = "0.5", default-features = false }
+alloy-consensus = { version = "0.5", default-features = false }
+alloy-provider = { version = "0.6", default-features = false }
+alloy-primitives = { version = "0.8", features = ["getrandom"] }
+alloy-rlp = "0.3"
+alloy-rpc-types = { version = "0.5", features = [
     "eth",
 ], default-features = false }
-alloy-signer = { version = "0.5.4", default-features = false }
-alloy-signer-local = { version = "0.5.4", default-features = false }
+alloy-signer = { version = "0.5", default-features = false }
+alloy-signer-local = { version = "0.5", default-features = false }
 alloy-sol-types  = { version = "0.8", features = ["json"] }
+alloy-transport-http = { version = "0.6", default-features = false }
 futures = "0.3"
 futures-util = "0.3"
 tokio = { version = "1.0", features = ["full"] }
 reqwest = { version = "0.12", features = ["blocking"] }
 bytes = { version = "1" }
+
+# cli
+clap = { version = "4.5" }
+anyhow = { version = "1" }
 
 # da-server
 axum = { version = "0.7" }
@@ -51,6 +58,16 @@ aws-config = { version = "1.5", features = ["behavior-version-latest"] }
 aws-sdk-s3 = { version = "1.60" }
 uuid = { version = "1.11", features = ["v4", "fast-rng"] }
 dotenvy = { version = "0.15" }
+
+# smt-server
+sha3 = { version = "0.10" }
+alloy-merkle-tree = { version = "0.7" }
+monotree = { version = "0.1" }
+parking_lot = { version = "0.12" }
+rocksdb = { version = "0.22" }
+thiserror = { version = "2.0" }
+tempfile = { version = "3.14" }
+rand = { version = "0.8"}
 
 # serde
 serde = "1"
