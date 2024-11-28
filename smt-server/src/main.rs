@@ -1,7 +1,5 @@
 use alloy_primitives::{
-    bytes::Buf,
-    fixed_bytes,
-    hex::{self, FromHex},
+    hex::{FromHex},
     B256,
 };
 use axum::{

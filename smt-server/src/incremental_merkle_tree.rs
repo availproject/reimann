@@ -198,7 +198,7 @@ mod tests {
 
     #[test]
     fn test_empty_tree() {
-        let mut tree = MerkleTree::new(3);
+        let tree = MerkleTree::new(3);
         let root = tree.root();
 
         // An empty tree's root should match the hash of the highest level zero hash with itself

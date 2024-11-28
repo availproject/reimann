@@ -1,29 +1,24 @@
 use alloy::{
-    network::{Ethereum, EthereumWallet, NetworkWallet, TransactionBuilder},
+    network::{EthereumWallet, NetworkWallet, TransactionBuilder},
     primitives::U256,
     providers::{Provider, ProviderBuilder},
     rpc::types::TransactionRequest,
     signers::local::PrivateKeySigner,
     sol,
 };
-use alloy_consensus::TxLegacy;
-use alloy_primitives::{Address, Bytes, TxKind, B256};
-use alloy_provider::{fillers::FillProvider, WalletProvider};
-use alloy_signer::{Signer, SignerSync};
-use alloy_transport_http::Http;
+use alloy_primitives::{Address, B256};
+use alloy_provider::WalletProvider;
+use alloy_signer::Signer;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use futures::future::{join, join_all};
+use futures::future::join_all;
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::{
-    char::from_digit,
-    process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
 sol!(
     #[sol(rpc)]
