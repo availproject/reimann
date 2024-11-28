@@ -747,10 +747,7 @@ async fn test_full_run() -> Result<()> {
     .await?;
 
     let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
-    println!(
-        "✅ Full run test completed successfully in {}s",
-        elapsed
-    );
+    println!("✅ Full run test completed successfully in {}s", elapsed);
     Ok(())
 }
 
@@ -969,10 +966,7 @@ async fn test_transfers(count: u32, rpc: &str, amount: f64) -> Result<()> {
     }
     join_all(futures).await;
     let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
-    println!(
-        "✅ All transfer requests completed in {}s",
-        elapsed
-    );
+    println!("✅ All transfer requests completed in {}s", elapsed);
 
     Ok(())
 }
