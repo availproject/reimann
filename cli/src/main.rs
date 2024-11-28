@@ -362,6 +362,11 @@ async fn mint_tokens(
     Ok(())
 }
 
+#[derive(Deserialize)]
+struct AppendResponse {
+    index: u32,
+}
+
 async fn create_order(
     rpc: &str,
     wallet: &EthereumWallet,
@@ -403,27 +408,21 @@ async fn create_order(
         .get_receipt()
         .await?;
     let order_hash = &receipt.inner.logs()[0].data().data;
-    println!(
-        "📤 Created order {} on RollupSettler {} to chain {}",
-        order_hash,
-        *settler.address(),
-        destination
-    );
     let client = reqwest::Client::new();
-    let res = client
+    let response = client
         .post("http://127.0.0.1:3001/add")
         .body(format!("{}", order_hash))
         .send()
         .await?;
-    #[derive(Deserialize)]
-    struct Response {
-        success: bool,
-        root: B256,
-        index: u32,
-    }
-    // parse res into response
-    let res = res.json::<Response>().await?;
-    Ok(res.index)
+    let index = response.json::<AppendResponse>().await?;
+    println!(
+        "📤 Created order number {} with hash {} on RollupSettler {} to chain {}",
+        index.index,
+        order_hash,
+        *settler.address(),
+        destination
+    );
+    Ok(index.index)
 }
 
 async fn update_nexus_order_root(
@@ -486,6 +485,10 @@ async fn update_rollup_order_root(
     Ok(())
 }
 
+#[derive(Deserialize)]
+struct ProofResponse {
+    proof: [B256; 32],
+}
 async fn fulfill_order(
     rpc: &str,
     wallet: &EthereumWallet,
@@ -515,17 +518,11 @@ async fn fulfill_order(
         .await?;
     // query proof from smt-server
     let client = reqwest::Client::new();
-    let res = client
+    let response = client
         .get(format!("http://127.0.0.1:3001/query/{}", nonce))
         .send()
         .await?;
-    #[derive(Deserialize)]
-    struct Response {
-        success: bool,
-        proof: [B256; 32],
-        root: B256,
-    }
-    let res = res.json::<Response>().await?;
+    let proof = response.json::<ProofResponse>().await?;
     let receipt = settler
         .fulfil(
             fill_deadline,
@@ -537,7 +534,7 @@ async fn fulfill_order(
             min_amount,
             U256::from(source_chain),
             nonce,
-            res.proof,
+            proof.proof,
         )
         .send()
         .await?
@@ -609,13 +606,25 @@ async fn test_full_init() -> Result<()> {
         chains[0].rpc.clone(),
         &wallet,
         nexus_settler,
-        vec![31338, 31339],
+        vec![chains[1].chain_id, chains[2].chain_id],
     )
     .await?;
 
     // Cross-authorize rollups
-    authorize_rollup(chains[1].rpc.clone(), &wallet, rollup1_settler, 31339).await?;
-    authorize_rollup(chains[2].rpc.clone(), &wallet, rollup2_settler, 31338).await?;
+    authorize_rollup(
+        chains[1].rpc.clone(),
+        &wallet,
+        rollup1_settler,
+        chains[2].chain_id,
+    )
+    .await?;
+    authorize_rollup(
+        chains[2].rpc.clone(),
+        &wallet,
+        rollup2_settler,
+        chains[1].chain_id,
+    )
+    .await?;
 
     save_deployments(
         nexus_settler,

@@ -98,11 +98,12 @@ impl MerkleTree {
         }
     }
 
+    #[allow(dead_code)]
     pub fn verify_proof(leaf: B256, index: usize, root: B256, proof: Vec<B256>) -> bool {
         let mut current = leaf;
         let mut current_index = index;
 
-        for (i, sibling) in proof.iter().enumerate() {
+        for sibling in proof.iter() {
             let (left, right) = if current_index % 2 == 0 {
                 (current, *sibling)
             } else {
