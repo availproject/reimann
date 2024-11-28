@@ -1,5 +1,5 @@
 use alloy::{
-    network::{EthereumWallet, NetworkWallet, TransactionBuilder},
+    network::{EthereumWallet, TransactionBuilder},
     primitives::U256,
     providers::{Provider, ProviderBuilder},
     rpc::types::TransactionRequest,
@@ -8,7 +8,6 @@ use alloy::{
 };
 use alloy_primitives::{Address, B256};
 use alloy_provider::WalletProvider;
-use alloy_signer::Signer;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use futures::future::join_all;
@@ -17,8 +16,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::fs;
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::process::{Command, Stdio};
+use std::str::FromStr;
 
 sol!(
     #[sol(rpc)]

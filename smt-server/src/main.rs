@@ -1,7 +1,4 @@
-use alloy_primitives::{
-    hex::{FromHex},
-    B256,
-};
+use alloy_primitives::{hex::FromHex, B256};
 use axum::{
     body::Bytes,
     extract::{Path, State},
