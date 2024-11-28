@@ -3,7 +3,7 @@ src = "src"
 out = "out"
 libs = ["lib"]
 version = "0.8.28"
-evm_version = "cancun"
+evm_version = "shanghai"
 via_ir = true
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
