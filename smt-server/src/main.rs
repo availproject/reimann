@@ -1,4 +1,9 @@
-use alloy_primitives::{bytes::Buf, fixed_bytes, hex::{self, FromHex}, B256};
+use alloy_primitives::{
+    bytes::Buf,
+    fixed_bytes,
+    hex::{self, FromHex},
+    B256,
+};
 use axum::{
     body::Bytes,
     extract::{Path, State},
@@ -31,12 +36,14 @@ async fn root() -> impl IntoResponse {
 async fn add(state: State<Arc<RwLock<AppState>>>, data: Bytes) -> impl IntoResponse {
     let node = match B256::from_hex(data.as_ref()) {
         Ok(node) => node,
-        Err(_) => return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({
-                "error": "Leaf was not parseable as a 32-byte hex string"
-            })),
-        ),
+        Err(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "Leaf was not parseable as a 32-byte hex string"
+                })),
+            )
+        }
     };
     let mut state = state.write();
     let index = state.tree.len();
@@ -67,13 +74,10 @@ async fn query(state: State<Arc<RwLock<AppState>>>, Path(index): Path<u32>) -> i
     )
 }
 
-
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let tree = MerkleTree::new(32);
-    let app_state = Arc::new(RwLock::new(AppState {
-        tree,
-    }));
+    let app_state = Arc::new(RwLock::new(AppState { tree }));
     let app = Router::new()
         .route("/", get(root))
         .route("/add", post(add))

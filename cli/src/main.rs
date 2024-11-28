@@ -1,24 +1,28 @@
-use alloy_provider::{fillers::FillProvider, WalletProvider};
-use clap::{Parser, Subcommand};
-use reqwest::Url;
-use serde::Deserialize;
-use std::{char::from_digit, process::{Command, Stdio}};
-use anyhow::{Context, Result};
-use std::fs;
-use std::path::PathBuf;
-use serde_json::{json, Value};
-use alloy_primitives::{Address, Bytes, TxKind, B256};
-use alloy_signer::{Signer, SignerSync};
-use alloy_transport_http::Http;
-use alloy_consensus::TxLegacy;
-use futures::future::{join, join_all};
-use std::str::FromStr;
 use alloy::{
     network::{Ethereum, EthereumWallet, NetworkWallet, TransactionBuilder},
     primitives::U256,
     providers::{Provider, ProviderBuilder},
     rpc::types::TransactionRequest,
-    signers::local::PrivateKeySigner, sol,
+    signers::local::PrivateKeySigner,
+    sol,
+};
+use alloy_consensus::TxLegacy;
+use alloy_primitives::{Address, Bytes, TxKind, B256};
+use alloy_provider::{fillers::FillProvider, WalletProvider};
+use alloy_signer::{Signer, SignerSync};
+use alloy_transport_http::Http;
+use anyhow::{Context, Result};
+use clap::{Parser, Subcommand};
+use futures::future::{join, join_all};
+use reqwest::Url;
+use serde::Deserialize;
+use serde_json::{json, Value};
+use std::fs;
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::{
+    char::from_digit,
+    process::{Command, Stdio},
 };
 
 sol!(
@@ -120,7 +124,11 @@ enum RunCommands {
         port: u16,
         #[arg(long, help = "P2P port for the rollup node", default_value = "30304")]
         p2p_port: u16,
-        #[arg(long, help = "AuthRPC port for the rollup node", default_value = "8552")]
+        #[arg(
+            long,
+            help = "AuthRPC port for the rollup node",
+            default_value = "8552"
+        )]
         authrpc_port: u16,
     },
 
@@ -137,7 +145,11 @@ enum RunCommands {
     )]
     Nexus {
         /// Name of the nexus instance
-        #[arg(long, help = "Unique name for the nexus instance", default_value = "nexus")]
+        #[arg(
+            long,
+            help = "Unique name for the nexus instance",
+            default_value = "nexus"
+        )]
         name: String,
         /// HTTP port for the nexus node
         #[arg(long, help = "HTTP port for the nexus node", default_value = "8545")]
@@ -199,7 +211,10 @@ struct ChainConfig {
 }
 
 async fn deploy_nexus_settler(rpc: String, wallet: &EthereumWallet) -> Result<Address> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let contract = NexusSettler::deploy(&provider).await?;
 
@@ -208,8 +223,11 @@ async fn deploy_nexus_settler(rpc: String, wallet: &EthereumWallet) -> Result<Ad
 }
 
 async fn deploy_rollup_settler(rpc: String, wallet: &EthereumWallet) -> Result<Address> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
-    
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
+
     let contract = RollupSettler::deploy(&provider).await?;
 
     println!("🧱 Deployed RollupSettler at: {}", contract.address());
@@ -222,13 +240,24 @@ async fn authorize_rollups(
     contract_address: Address,
     chain_ids: Vec<u64>,
 ) -> Result<()> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let contract = NexusSettler::new(contract_address, provider);
     for chain_id in chain_ids.clone() {
-        contract.createRollup(U256::from(chain_id), Address::random()).send().await?.register().await?;
+        contract
+            .createRollup(U256::from(chain_id), Address::random())
+            .send()
+            .await?
+            .register()
+            .await?;
     }
-    println!("✍️ Authorized chain IDs {:?} on Nexus contract {}", chain_ids, contract_address);
+    println!(
+        "✍️ Authorized chain IDs {:?} on Nexus contract {}",
+        chain_ids, contract_address
+    );
     Ok(())
 }
 
@@ -238,12 +267,23 @@ async fn authorize_rollup(
     contract_address: Address,
     chain_id: u64,
 ) -> Result<()> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let contract = RollupSettler::new(contract_address, provider);
-    contract.authorizeRollup(U256::from(chain_id)).send().await?.register().await?;
+    contract
+        .authorizeRollup(U256::from(chain_id))
+        .send()
+        .await?
+        .register()
+        .await?;
 
-    println!("✍️ Authorized chain {} on contract {}", chain_id, contract_address);
+    println!(
+        "✍️ Authorized chain {} on contract {}",
+        chain_id, contract_address
+    );
     Ok(())
 }
 
@@ -285,15 +325,20 @@ async fn save_deployments(
     let file_path = deployments_dir.join("run-latest.json");
     fs::write(
         &file_path,
-        serde_json::to_string_pretty(&deployments).context("Failed to serialize deployments JSON")?,
-    ).with_context(|| format!("❌ Failed to write deployments to {}", file_path.display()))?;
+        serde_json::to_string_pretty(&deployments)
+            .context("Failed to serialize deployments JSON")?,
+    )
+    .with_context(|| format!("❌ Failed to write deployments to {}", file_path.display()))?;
 
     println!("📄 Deployments saved to {}", file_path.display());
     Ok(())
 }
 
 async fn deploy_erc20(rpc: String, wallet: &EthereumWallet) -> Result<Address> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let contract = MockERC20::deploy(&provider).await?;
 
@@ -307,13 +352,19 @@ async fn mint_tokens(
     token: Address,
     amount: U256,
 ) -> Result<()> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let address = provider.default_signer_address();
     let erc20 = MockERC20::new(token, provider);
     erc20.mint(address, amount).send().await?.register().await?;
 
-    println!("🪙 Minted ERC20 tokens with address {} to: {}", token, address);
+    println!(
+        "🪙 Minted ERC20 tokens with address {} to: {}",
+        token, address
+    );
     Ok(())
 }
 
@@ -329,25 +380,47 @@ async fn create_order(
     min_amount_out: U256,
     destination: u64,
 ) -> Result<u32> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let erc20 = MockERC20::new(from_token, &provider);
     let settler = RollupSettler::new(settler, &provider);
-    erc20.approve(*settler.address(), amount_in).send().await?.with_required_confirmations(1).watch().await?;
-    let receipt = settler.send(
-        fill_deadline,
-        from_token,
-        to_token,
-        recipient,
-        amount_in,
-        min_amount_out,
-        U256::from(destination),
-    ).send().await?.get_receipt().await?;
+    erc20
+        .approve(*settler.address(), amount_in)
+        .send()
+        .await?
+        .with_required_confirmations(1)
+        .watch()
+        .await?;
+    let receipt = settler
+        .send(
+            fill_deadline,
+            from_token,
+            to_token,
+            recipient,
+            amount_in,
+            min_amount_out,
+            U256::from(destination),
+        )
+        .send()
+        .await?
+        .get_receipt()
+        .await?;
     let order_hash = &receipt.inner.logs()[0].data().data;
-    println!("📤 Created order {} on RollupSettler {} to chain {}", order_hash, *settler.address(), destination);
+    println!(
+        "📤 Created order {} on RollupSettler {} to chain {}",
+        order_hash,
+        *settler.address(),
+        destination
+    );
     let client = reqwest::Client::new();
-    let res = client.post("http://127.0.0.1:3001/add")
-        .body(format!("{}", order_hash)).send().await?;
+    let res = client
+        .post("http://127.0.0.1:3001/add")
+        .body(format!("{}", order_hash))
+        .send()
+        .await?;
     #[derive(Deserialize)]
     struct Response {
         success: bool,
@@ -366,12 +439,26 @@ async fn update_nexus_order_root(
     chain_id: u64,
     root: B256,
 ) -> Result<()> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let settler = NexusSettler::new(settler, &provider);
-    settler.updateRollupOrderRoot(U256::from(chain_id), root).send().await?.with_required_confirmations(1).watch().await?;
+    settler
+        .updateRollupOrderRoot(U256::from(chain_id), root)
+        .send()
+        .await?
+        .with_required_confirmations(1)
+        .watch()
+        .await?;
 
-    println!("⬆️  Updated order root {} for chain {} on NexusSettler {}", root, chain_id, *settler.address());
+    println!(
+        "⬆️  Updated order root {} for chain {} on NexusSettler {}",
+        root,
+        chain_id,
+        *settler.address()
+    );
     Ok(())
 }
 
@@ -382,12 +469,26 @@ async fn update_rollup_order_root(
     chain_id: u64,
     root: B256,
 ) -> Result<()> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let settler = RollupSettler::new(settler, &provider);
-    settler.updateRollupOrderRoot(U256::from(chain_id), root).send().await?.with_required_confirmations(1).watch().await?;
+    settler
+        .updateRollupOrderRoot(U256::from(chain_id), root)
+        .send()
+        .await?
+        .with_required_confirmations(1)
+        .watch()
+        .await?;
 
-    println!("⬆️  Updated order root {} for chain {} on RollupSettler {}", root, chain_id, *settler.address());
+    println!(
+        "⬆️  Updated order root {} for chain {} on RollupSettler {}",
+        root,
+        chain_id,
+        *settler.address()
+    );
     Ok(())
 }
 
@@ -403,15 +504,27 @@ async fn fulfill_order(
     source_chain: u64,
     nonce: u32,
 ) -> Result<()> {
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<Url>()?);
 
     let erc20 = MockERC20::new(to_token, &provider);
     let settler = RollupSettler::new(settler, &provider);
     let sender = provider.default_signer_address();
-    erc20.approve(*settler.address(), amount).send().await?.with_required_confirmations(1).watch().await?;
+    erc20
+        .approve(*settler.address(), amount)
+        .send()
+        .await?
+        .with_required_confirmations(1)
+        .watch()
+        .await?;
     // query proof from smt-server
     let client = reqwest::Client::new();
-    let res = client.get(format!("http://127.0.0.1:3001/query/{}", nonce)).send().await?;
+    let res = client
+        .get(format!("http://127.0.0.1:3001/query/{}", nonce))
+        .send()
+        .await?;
     #[derive(Deserialize)]
     struct Response {
         success: bool,
@@ -419,33 +532,54 @@ async fn fulfill_order(
         root: B256,
     }
     let res = res.json::<Response>().await?;
-    let receipt = settler.fulfil(
-        fill_deadline,
-        from_token,
-        to_token,
-        sender,
-        sender,
-        amount,
-        min_amount,
-        U256::from(source_chain),
-        nonce,
-        res.proof,
-    ).send().await?.get_receipt().await?;
+    let receipt = settler
+        .fulfil(
+            fill_deadline,
+            from_token,
+            to_token,
+            sender,
+            sender,
+            amount,
+            min_amount,
+            U256::from(source_chain),
+            nonce,
+            res.proof,
+        )
+        .send()
+        .await?
+        .get_receipt()
+        .await?;
     let order_hash = &receipt.inner.logs()[0].data().data;
 
-    println!("📥 Fulfilled order {} on RollupSettler {} from chain {}", order_hash, *settler.address(), source_chain);
+    println!(
+        "📥 Fulfilled order {} on RollupSettler {} from chain {}",
+        order_hash,
+        *settler.address(),
+        source_chain
+    );
     Ok(())
 }
 
 async fn test_full_init() -> Result<()> {
     // Default private key
-    let signer: PrivateKeySigner = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80".parse::<PrivateKeySigner>()?;
+    let signer: PrivateKeySigner =
+        "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+            .parse::<PrivateKeySigner>()?;
     let wallet = EthereumWallet::from(signer.clone());
 
     let chains = [
-        ChainConfig { chain_id: 31337, rpc: "http://127.0.0.1:8545".into() },
-        ChainConfig { chain_id: 31338, rpc: "http://127.0.0.1:8546".into() },
-        ChainConfig { chain_id: 31339, rpc: "http://127.0.0.1:8547".into() },
+        ChainConfig {
+            chain_id: 31337,
+            rpc: "http://127.0.0.1:8545".into(),
+        },
+        ChainConfig {
+            chain_id: 31338,
+            rpc: "http://127.0.0.1:8546".into(),
+        },
+        ChainConfig {
+            chain_id: 31339,
+            rpc: "http://127.0.0.1:8547".into(),
+        },
     ];
 
     let start = std::time::Instant::now();
@@ -461,20 +595,48 @@ async fn test_full_init() -> Result<()> {
     let rollup2_erc20 = deploy_erc20(chains[2].rpc.clone(), &wallet).await?;
 
     // Mint tokens for rollups
-    mint_tokens(chains[1].rpc.as_str(), &wallet, rollup1_erc20, U256::from(1e28)).await?;
-    mint_tokens(chains[2].rpc.as_str(), &wallet, rollup2_erc20, U256::from(1e28)).await?;
+    mint_tokens(
+        chains[1].rpc.as_str(),
+        &wallet,
+        rollup1_erc20,
+        U256::from(1e28),
+    )
+    .await?;
+    mint_tokens(
+        chains[2].rpc.as_str(),
+        &wallet,
+        rollup2_erc20,
+        U256::from(1e28),
+    )
+    .await?;
 
     // Authorize rollups on NexusSettler
-    authorize_rollups(chains[0].rpc.clone(), &wallet, nexus_settler, vec![31338, 31339]).await?;
+    authorize_rollups(
+        chains[0].rpc.clone(),
+        &wallet,
+        nexus_settler,
+        vec![31338, 31339],
+    )
+    .await?;
 
     // Cross-authorize rollups
     authorize_rollup(chains[1].rpc.clone(), &wallet, rollup1_settler, 31339).await?;
     authorize_rollup(chains[2].rpc.clone(), &wallet, rollup2_settler, 31338).await?;
 
-    save_deployments(nexus_settler, rollup1_settler, rollup2_settler, rollup1_erc20, rollup2_erc20).await?;
+    save_deployments(
+        nexus_settler,
+        rollup1_settler,
+        rollup2_settler,
+        rollup1_erc20,
+        rollup2_erc20,
+    )
+    .await?;
 
     let elapsed = start.elapsed();
-    println!("✅ Full initialization completed successfully in {}s", elapsed.as_secs_f64());
+    println!(
+        "✅ Full initialization completed successfully in {}s",
+        elapsed.as_secs_f64()
+    );
     Ok(())
 }
 
@@ -482,41 +644,53 @@ async fn test_full_run() -> Result<()> {
     // Read deployments
     let deployments_file = fs::read_to_string("chains/deployments/run-latest.json")
         .context("Failed to read deployments file")?;
-    let deployments: serde_json::Value = serde_json::from_str(&deployments_file)
-        .context("Failed to parse deployments file")?;
+    let deployments: serde_json::Value =
+        serde_json::from_str(&deployments_file).context("Failed to parse deployments file")?;
 
     let nexus_settler_addr = Address::from_str(
-        deployments["nexusSettler"]["address"].as_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid nexus settler address"))?
+        deployments["nexusSettler"]["address"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid nexus settler address"))?,
     )?;
     let rollup1_settler_addr = Address::from_str(
-        deployments["rollup1Settler"]["address"].as_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid rollup1 settler address"))?
+        deployments["rollup1Settler"]["address"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid rollup1 settler address"))?,
     )?;
     let rollup2_settler_addr = Address::from_str(
-        deployments["rollup2Settler"]["address"].as_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid rollup2 settler address"))?
+        deployments["rollup2Settler"]["address"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid rollup2 settler address"))?,
     )?;
     let rollup1_erc20_addr = Address::from_str(
-        deployments["rollup1ERC20"]["address"].as_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid rollup1 ERC20 address"))?
+        deployments["rollup1ERC20"]["address"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid rollup1 ERC20 address"))?,
     )?;
     let rollup2_erc20_addr = Address::from_str(
-        deployments["rollup2ERC20"]["address"].as_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid rollup2 ERC20 address"))?
+        deployments["rollup2ERC20"]["address"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid rollup2 ERC20 address"))?,
     )?;
 
-    let signer: PrivateKeySigner = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80".parse::<PrivateKeySigner>()?;
+    let signer: PrivateKeySigner =
+        "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+            .parse::<PrivateKeySigner>()?;
     let wallet = EthereumWallet::from(signer.clone());
 
     let address = Address::from_str("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")?;
     let amount_wei = U256::from(1e18 as u64);
 
-    let rollup1_provider = ProviderBuilder::new().with_recommended_fillers().wallet(&wallet).on_http("http://127.0.0.1:8546".parse::<reqwest::Url>()?);
+    let rollup1_provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(&wallet)
+        .on_http("http://127.0.0.1:8546".parse::<reqwest::Url>()?);
 
     let rollup1_settler = RollupSettler::new(rollup1_settler_addr, rollup1_provider.clone());
 
-    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs() as u32;
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_secs() as u32;
     let start = std::time::Instant::now();
 
     let nonce = create_order(
@@ -530,10 +704,11 @@ async fn test_full_run() -> Result<()> {
         amount_wei,
         amount_wei,
         31339,
-    ).await?;
+    )
+    .await?;
 
     let order_root = rollup1_settler.orderRoot().call().await?._0;
-    
+
     // Update roots across chains
     update_nexus_order_root(
         "http://127.0.0.1:8545",
@@ -541,7 +716,8 @@ async fn test_full_run() -> Result<()> {
         nexus_settler_addr,
         31338,
         order_root,
-    ).await?;
+    )
+    .await?;
 
     update_rollup_order_root(
         "http://127.0.0.1:8547",
@@ -549,7 +725,8 @@ async fn test_full_run() -> Result<()> {
         rollup2_settler_addr,
         31338,
         order_root,
-    ).await?;
+    )
+    .await?;
 
     // Fulfill order on rollup2
     fulfill_order(
@@ -561,12 +738,16 @@ async fn test_full_run() -> Result<()> {
         rollup2_erc20_addr,
         amount_wei, // 1 token
         amount_wei, // 1 token minimum
-        31338, 
-        nonce// rollup1 chain id
-    ).await?;
+        31338,
+        nonce, // rollup1 chain id
+    )
+    .await?;
     let elapsed = start.elapsed();
 
-    println!("✅ Full run test completed successfully in {}s", elapsed.as_secs_f64());
+    println!(
+        "✅ Full run test completed successfully in {}s",
+        elapsed.as_secs_f64()
+    );
     Ok(())
 }
 
@@ -725,11 +906,7 @@ fn create_genesis_files() -> Result<()> {
     fs::create_dir_all(&genesis_dir).context("❌ Failed to create genesis directory")?;
 
     // Create genesis files for different chain IDs
-    let chain_configs = [
-        ("nexus", 31337),
-        ("rollup1", 31338),
-        ("rollup2", 31339),
-    ];
+    let chain_configs = [("nexus", 31337), ("rollup1", 31338), ("rollup2", 31339)];
 
     for (name, chain_id) in chain_configs.iter() {
         let mut genesis = base_genesis.clone();
@@ -739,9 +916,13 @@ fn create_genesis_files() -> Result<()> {
         fs::write(
             &file_path,
             serde_json::to_string_pretty(&genesis).context("Failed to serialize genesis JSON")?,
-        ).with_context(|| format!("❌ Failed to write genesis file for {}", name))?;
+        )
+        .with_context(|| format!("❌ Failed to write genesis file for {}", name))?;
 
-        println!("📜 Created genesis file for {} with chain ID {} at {:?}", name, chain_id, file_path);
+        println!(
+            "📜 Created genesis file for {} with chain ID {} at {:?}",
+            name, chain_id, file_path
+        );
     }
 
     Ok(())
@@ -749,14 +930,22 @@ fn create_genesis_files() -> Result<()> {
 
 async fn test_transfers(count: u32, rpc: &str, amount: f64) -> Result<()> {
     // Default private key for account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    let signer: PrivateKeySigner = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80".parse::<PrivateKeySigner>()?;
+    let signer: PrivateKeySigner =
+        "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+            .parse::<PrivateKeySigner>()?;
     let wallet = EthereumWallet::from(signer.clone());
-    let provider = ProviderBuilder::new().with_recommended_fillers().wallet(wallet).on_http(rpc.parse::<reqwest::Url>()?);
+    let provider = ProviderBuilder::new()
+        .with_recommended_fillers()
+        .wallet(wallet)
+        .on_http(rpc.parse::<reqwest::Url>()?);
 
     let address = Address::from_str("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")?;
     let amount_wei = U256::from((amount * 1e18) as u64);
 
-    println!("📩 Starting {} transfers of {} ETH each to {}", count, amount, address);
+    println!(
+        "📩 Starting {} transfers of {} ETH each to {}",
+        count, amount, address
+    );
 
     let nonce = provider.get_transaction_count(address).await?;
     println!("ℹ Current nonce: {}", nonce);
@@ -766,18 +955,21 @@ async fn test_transfers(count: u32, rpc: &str, amount: f64) -> Result<()> {
     let start = std::time::Instant::now();
     for i in 0..count {
         let tx = TransactionRequest::default()
-        .with_to(address)
-        .with_nonce(nonce + i as u64)
-        .with_chain_id(chain_id)
-        .with_value(amount_wei)
-        .with_gas_limit(21_000)
-        .with_max_priority_fee_per_gas(1)
-        .with_max_fee_per_gas(20_000_000_000);
+            .with_to(address)
+            .with_nonce(nonce + i as u64)
+            .with_chain_id(chain_id)
+            .with_value(amount_wei)
+            .with_gas_limit(21_000)
+            .with_max_priority_fee_per_gas(1)
+            .with_max_fee_per_gas(20_000_000_000);
         futures.push(provider.send_transaction(tx).await?.register());
     }
     join_all(futures).await;
     let elapsed = start.elapsed();
-    println!("✅ All transfer requests completed, time elapsed: {}s", elapsed.as_secs_f64());
+    println!(
+        "✅ All transfer requests completed, time elapsed: {}s",
+        elapsed.as_secs_f64()
+    );
 
     Ok(())
 }
@@ -790,8 +982,13 @@ async fn main() -> Result<()> {
         Commands::Run { component } => match component {
             RunCommands::Da => run_da()?,
             RunCommands::Smt => run_smt()?,
-            RunCommands::Rollup { name, port, p2p_port  , authrpc_port } => run_rollup(&name, port, p2p_port, authrpc_port)?,
-            RunCommands::Nexus { name, port} => run_nexus(&name, port)?,
+            RunCommands::Rollup {
+                name,
+                port,
+                p2p_port,
+                authrpc_port,
+            } => run_rollup(&name, port, p2p_port, authrpc_port)?,
+            RunCommands::Nexus { name, port } => run_nexus(&name, port)?,
         },
         Commands::Genesis { action } => match action {
             GenesisCommands::Init => create_genesis_files()?,
@@ -799,12 +996,10 @@ async fn main() -> Result<()> {
         Commands::Test { action } => match action {
             TestCommands::Transfers { count, rpc, amount } => {
                 test_transfers(count, &rpc, amount).await?
-            },
+            }
             TestCommands::Full { action } => match action {
                 FullCommands::Init => test_full_init().await?,
-                FullCommands::Run => {
-                    test_full_run().await?
-                }
+                FullCommands::Run => test_full_run().await?,
             },
         },
     }
