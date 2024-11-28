@@ -53,3 +53,8 @@ cargo run --bin cli test full init
 ```bash
 cargo run --bin cli test full run
 ```
+
+## Hol' up, I'm lazy af
+```bash
+./demo.sh
+```
