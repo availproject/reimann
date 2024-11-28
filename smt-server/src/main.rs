@@ -1,4 +1,4 @@
-use alloy_primitives::{hex::FromHex, B256};
+use alloy::primitives::{hex::FromHex, B256};
 use axum::{
     body::Bytes,
     extract::{Path, State},
@@ -41,15 +41,13 @@ async fn add(state: State<Arc<RwLock<AppState>>>, data: Bytes) -> impl IntoRespo
         }
     };
     let mut state = state.write();
-    let index = state.tree.len();
     state.tree.append(node);
-    let root = state.tree.root();
     (
         StatusCode::OK,
         Json(json!({
             "success": true,
-            "root": root,
-            "index": index
+            "root": state.tree.root(),
+            "index": state.tree.len() - 1,
         })),
     )
 }
@@ -80,9 +78,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3001")
-        .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3001").await?;
+    axum::serve(listener, app).await?;
     Ok(())
 }

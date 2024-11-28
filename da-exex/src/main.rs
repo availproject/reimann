@@ -57,6 +57,7 @@ impl<Node: FullNodeComponents> DAExEx<Node> {
 impl<Node: FullNodeComponents + Unpin> Future for DAExEx<Node> {
     type Output = eyre::Result<()>;
 
+    #[inline]
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
 

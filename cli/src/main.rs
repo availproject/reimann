@@ -405,6 +405,7 @@ async fn create_order(
         )
         .send()
         .await?
+        .with_required_confirmations(1)
         .get_receipt()
         .await?;
     let order_hash = &receipt.inner.logs()[0].data().data;
@@ -538,6 +539,7 @@ async fn fulfill_order(
         )
         .send()
         .await?
+        .with_required_confirmations(1)
         .get_receipt()
         .await?;
     let order_hash = &receipt.inner.logs()[0].data().data;

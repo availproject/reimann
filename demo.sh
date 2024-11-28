@@ -20,13 +20,14 @@ cleanup() {
 
     # kill all processes
     for pid in "${pids[@]}"; do
-        kill $pid > /dev/null 2>&1
+        kill -9 $pid > /dev/null 2>&1
     done
-    pkill -f nexus
-    pkill -f rollup1
-    pkill -f rollup2
-    pkill -f da-server
-    pkill -f smt-server
+    sleep 1
+    pkill -9 -f nexus
+    pkill -9 -f rollup1
+    pkill -9 -f rollup2
+    pkill -9 -f da-server
+    pkill -9 -f smt-server
     sleep 1
     
     rm -rf logs
@@ -70,14 +71,14 @@ echo "🧱 Starting DA server..."
 cargo run --bin cli run da > logs/da.log 2>&1 &
 pids+=($!)
 echo "ℹ️ DA server started with PID: ${pids[0]}"
-sleep 1
+sleep 2
 
 # Start SMT server
 echo "🌳 Starting SMT server..."
 cargo run --bin cli run smt > logs/smt.log 2>&1 &
 pids+=($!)
 echo "ℹ️ SMT server started with PID: ${pids[1]}"
-sleep 1
+sleep 2
 
 # Generate genesis files
 echo "📜 Generating genesis files..."

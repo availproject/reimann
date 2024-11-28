@@ -1,4 +1,4 @@
-use alloy_primitives::B256;
+use alloy::primitives::B256;
 use sha3::{Digest, Keccak256};
 pub struct MerkleTree {
     tree: Vec<Vec<B256>>,
@@ -89,6 +89,7 @@ impl MerkleTree {
         proof
     }
 
+    #[inline]
     pub fn root(&self) -> B256 {
         if self.tree[self.height].is_empty() {
             let last_zero = self.zero_hashes[self.height - 1];
@@ -99,6 +100,7 @@ impl MerkleTree {
     }
 
     #[allow(dead_code)]
+    #[inline]
     pub fn verify_proof(leaf: B256, index: usize, root: B256, proof: Vec<B256>) -> bool {
         let mut current = leaf;
         let mut current_index = index;
