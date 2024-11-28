@@ -61,12 +61,7 @@ dotenvy = { version = "0.15" }
 
 # smt-server
 sha3 = { version = "0.10" }
-alloy-merkle-tree = { version = "0.7" }
-monotree = { version = "0.1" }
 parking_lot = { version = "0.12" }
-rocksdb = { version = "0.22" }
-thiserror = { version = "2.0" }
-tempfile = { version = "3.14" }
 rand = { version = "0.8"}
 
 # serde

@@ -6,11 +6,8 @@ edition = "2021"
 [dependencies]
 tokio.workspace = true
 alloy.workspace = true
-alloy-consensus.workspace = true
 alloy-primitives.workspace = true
 alloy-provider.workspace = true
-alloy-signer.workspace = true
-alloy-signer-local.workspace = true
 alloy-transport-http.workspace = true
 futures.workspace = true
 clap.workspace = true
