@@ -749,7 +749,7 @@ async fn test_full_run() -> Result<()> {
     .await?;
 
     let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
-    println!("✅ Full run test completed successfully in {}s", elapsed);
+    println!("✅ Full Nexus test completed successfully in {}s", elapsed);
     Ok(())
 }
 
@@ -950,7 +950,7 @@ async fn test_transfers(count: u32, rpc: &str, amount: f64) -> Result<()> {
     );
 
     let nonce = provider.get_transaction_count(address).await?;
-    println!("ℹ Current nonce: {}", nonce);
+    println!("ℹ️ Current account nonce: {}", nonce);
     let chain_id = provider.get_chain_id().await?;
 
     let mut futures = vec![];

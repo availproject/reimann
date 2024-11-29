@@ -107,7 +107,7 @@ sleep 1
 
 # Wait for chains to be ready
 echo "⏳ Waiting for chains to be ready..."
-sleep 6
+sleep 7
 
 # Run test transfers
 echo "📤 Running test transfers..."
@@ -122,7 +122,7 @@ cargo run --bin cli test full init
 sleep 2
 
 # Run full test
-echo "🏃 Running full Nexus test..."
+echo "🏃 Running full Reimann test..."
 cargo run --bin cli test full run
 
 sleep 2
