@@ -19,16 +19,17 @@ cleanup() {
     echo -e "\n😴 Shutting down services..."
 
     # kill all processes
-    for pid in "${pids[@]}"; do
-        kill -9 $pid > /dev/null 2>&1
-    done
-    sleep 1
-    pkill -9 -f nexus
-    pkill -9 -f rollup1
-    pkill -9 -f rollup2
+    pkill -f da-exex
+    sleep 0.5
+    pkill -f da-server
+    sleep 0.5
+    pkill -f smt-server
+    sleep 0.5
+
+    pkill -9 -f da-exex
     pkill -9 -f da-server
     pkill -9 -f smt-server
-    sleep 1
+    sleep 0.5
     
     rm -rf logs
     rm -rf chains
@@ -116,7 +117,7 @@ cargo run --bin cli test transfers
 sleep 2
 
 # Run full init
-echo "🏃 Running full initialization..."
+echo "🏃 Running full Reimann initialization..."
 cargo run --bin cli test full init
 
 sleep 2

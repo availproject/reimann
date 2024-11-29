@@ -417,7 +417,7 @@ async fn create_order(
         .await?;
     let index = response.json::<AppendResponse>().await?;
     println!(
-        "📤 Created order number {} with hash {} on RollupSettler {} to chain {}",
+        "📤 Created order {} with hash {} on RollupSettler {} to chain {}",
         index.index,
         order_hash,
         *settler.address(),
@@ -545,7 +545,8 @@ async fn fulfill_order(
     let order_hash = &receipt.inner.logs()[0].data().data;
 
     println!(
-        "📥 Fulfilled order {} on RollupSettler {} from chain {}",
+        "📥 Fulfilled order {} with hash {} on RollupSettler {} from chain {}",
+        nonce,
         order_hash,
         *settler.address(),
         source_chain
@@ -639,7 +640,7 @@ async fn test_full_init() -> Result<()> {
 
     let elapsed = (start.elapsed().as_secs_f64() * 100.0).round() / 100.0;
     println!(
-        "✅ Full initialization completed successfully in {}s",
+        "✅ Full Reimann initialization completed successfully in {}s",
         elapsed
     );
     Ok(())
@@ -702,7 +703,7 @@ async fn test_full_run() -> Result<()> {
         "http://127.0.0.1:8546",
         &wallet,
         rollup1_settler_addr,
-        timestamp + 14, // 14 seconds because block.timestamp gets a bit off
+        timestamp + 25, // 25 seconds because block.timestamp gets a bit off
         rollup1_erc20_addr,
         rollup2_erc20_addr,
         address,
@@ -737,7 +738,7 @@ async fn test_full_run() -> Result<()> {
     fulfill_order(
         "http://127.0.0.1:8547",
         &wallet,
-        timestamp + 14,
+        timestamp + 25,
         rollup2_settler_addr,
         rollup1_erc20_addr,
         rollup2_erc20_addr,
@@ -852,6 +853,7 @@ fn run_nexus(name: &str, port: u16) -> Result<()> {
 }
 
 fn create_genesis_files() -> Result<()> {
+    let start = std::time::Instant::now();
     let base_genesis: Value = json!({
         "config": {
             "homesteadBlock": 0,
@@ -926,7 +928,10 @@ fn create_genesis_files() -> Result<()> {
             name, chain_id, file_path
         );
     }
-
+    println!(
+        "✅ Genesis files created successfully in {}s",
+        (start.elapsed().as_secs_f64() * 100.0).round() / 100.0
+    );
     Ok(())
 }
 
