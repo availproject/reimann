@@ -1,5 +1,5 @@
 [workspace]
-members = ["cli", "da-exex", "da-server", "smt-server"]
+members = ["cli", "da-exex", "da-server", "smt-server", "solver"]
 resolver = "2"
 
 [workspace.package]
