@@ -138,62 +138,59 @@ async fn read_orders(
                 let tx = tx.clone();
                 let data = tx.inner.input();
                 let tx_hash = hashes.next().unwrap();
-                match sendCall::abi_decode(&data, false) {
-                    Ok(decoded) => {
-                        println!("Decoded a tx!");
-                        let receipt = http_provider
-                            .get_transaction_receipt(tx_hash)
-                            .await?
-                            .unwrap();
-                        if !receipt.inner.status() {
-                            continue;
-                        }
-                        let order_hash = receipt.inner.logs()[0].data().data.clone();
-                        let response = client
-                            .post("http://127.0.0.1:3001/add")
-                            .body(format!("{}", order_hash))
-                            .send()
-                            .await?;
-                        let index = response.json::<AppendResponse>().await?;
-                        let order = Order {
-                            fill_deadline: decoded.fillDeadline,
-                            from_token: decoded.fromToken,
-                            to_token: decoded.toToken,
-                            sender: tx.from,
-                            recipient: decoded.recipient,
-                            amount_in: decoded.amountIn,
-                            min_amount_out: decoded.minAmountOut,
-                            destination: decoded.destination,
-                            nonce: index.index,
-                            order_hash: B256::from_slice(&order_hash),
-                        };
-                        println!("Decoded order: {:?}", order);
-                        {
-                            let orders_guard = state.orders.try_write();
-                            match orders_guard {
-                                Some(mut orders) => {
-                                    println!("Got first write lock");
-                                    orders.insert(order.order_hash.clone(), order.clone());
-                                    println!("Inserted into orders");
-                                }
-                                None => println!("Failed to acquire write lock for orders!"),
-                            }
-                        }
-                        println!("13. About to take second write lock");
-                        {
-                            let order_hashes_guard = state.order_hashes.try_write();
-                            match order_hashes_guard {
-                                Some(mut order_hashes) => {
-                                    println!("14. Got second write lock");
-                                    order_hashes.push(order.order_hash);
-                                    println!("15. Pushed to hashes");
-                                }
-                                None => println!("Failed to acquire write lock for order_hashes!"),
-                            }
-                        }
-                        println!("Found send() transaction: {:?}", order);
+                if let Ok(decoded) = sendCall::abi_decode(data, false) {
+                    println!("Decoded a tx!");
+                    let receipt = http_provider
+                        .get_transaction_receipt(tx_hash)
+                        .await?
+                        .unwrap();
+                    if !receipt.inner.status() {
+                        continue;
                     }
-                    Err(_) => {}
+                    let order_hash = receipt.inner.logs()[0].data().data.clone();
+                    let response = client
+                        .post("http://127.0.0.1:3001/add")
+                        .body(format!("{}", order_hash))
+                        .send()
+                        .await?;
+                    let index = response.json::<AppendResponse>().await?;
+                    let order = Order {
+                        fill_deadline: decoded.fillDeadline,
+                        from_token: decoded.fromToken,
+                        to_token: decoded.toToken,
+                        sender: tx.from,
+                        recipient: decoded.recipient,
+                        amount_in: decoded.amountIn,
+                        min_amount_out: decoded.minAmountOut,
+                        destination: decoded.destination,
+                        nonce: index.index,
+                        order_hash: B256::from_slice(&order_hash),
+                    };
+                    println!("Decoded order: {:?}", order);
+                    {
+                        let orders_guard = state.orders.try_write();
+                        match orders_guard {
+                            Some(mut orders) => {
+                                println!("Got first write lock");
+                                orders.insert(order.order_hash, order.clone());
+                                println!("Inserted into orders");
+                            }
+                            None => println!("Failed to acquire write lock for orders!"),
+                        }
+                    }
+                    println!("13. About to take second write lock");
+                    {
+                        let order_hashes_guard = state.order_hashes.try_write();
+                        match order_hashes_guard {
+                            Some(mut order_hashes) => {
+                                println!("14. Got second write lock");
+                                order_hashes.push(order.order_hash);
+                                println!("15. Pushed to hashes");
+                            }
+                            None => println!("Failed to acquire write lock for order_hashes!"),
+                        }
+                    }
+                    println!("Found send() transaction: {:?}", order);
                 }
             }
         }
@@ -257,7 +254,7 @@ async fn fill_orders(
         println!("Filling order: {:?}", order.order_hash);
 
         erc20
-            .mint(*&wallet.default_signer().address(), order.min_amount_out)
+            .mint(wallet.default_signer().address(), order.min_amount_out)
             .send()
             .await?
             .with_required_confirmations(1)
