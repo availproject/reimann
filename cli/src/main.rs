@@ -490,6 +490,7 @@ async fn update_rollup_order_root(
 struct ProofResponse {
     proof: [B256; 32],
 }
+
 async fn fulfill_order(
     rpc: &str,
     wallet: &EthereumWallet,
@@ -794,12 +795,14 @@ fn run_rollup(name: &str, port: u16, p2p_port: u16, authrpc_port: u16) -> Result
             "--builder.gaslimit",
             "1000000000",
             "--builder.interval",
-            "16ms",
+            "17ms",
             "--builder.extradata",
             "da-exex",
             "--http",
             "--http.port",
             &port.to_string(),
+            "--http.corsdomain",
+            "*",
             "--datadir",
             &format!("chains/{}", name),
             "--no-persist-peers",
@@ -833,12 +836,14 @@ fn run_nexus(name: &str, port: u16) -> Result<()> {
             "--builder.gaslimit",
             "1000000000",
             "--builder.interval",
-            "166ms",
+            "167ms",
             "--builder.extradata",
             "da-exex",
             "--http",
             "--http.port",
             &port.to_string(),
+            "--http.corsdomain",
+            "*",
             "--datadir",
             &format!("chains/{}", name),
             "--no-persist-peers",
@@ -901,6 +906,9 @@ fn create_genesis_files() -> Result<()> {
             },
             "0x90F79bf6EB2c4f870365E785982E1f101E93b906": {
                 "balance": "0x200000000000000000000000000000000000000000000000000000000000000"
+            },
+            "0xd23005D5cC4BBc347c1CF95036BA99AD943fC865": {
+                "balance": "0x56bc75e2d63100000"
             }
         }
     });
