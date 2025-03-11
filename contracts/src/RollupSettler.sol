@@ -39,7 +39,7 @@ contract RollupSettler is DepositContract {
         authorizedRollups[chainId] = false;
     }
 
-    function send(uint32 fillDeadline, IERC20 fromToken, IERC20 toToken, address recipient, uint256 amountIn, uint256 minAmountOut, uint256 destination) external {
+    function send(uint32 fillDeadline, IERC20 fromToken, IERC20 toToken, address recipient, uint256 amountIn, uint256 minAmountOut, uint256 destination, address resolver) external {
         require(authorizedRollups[destination], UnauthorizedRollup(destination));
         require(fillDeadline > block.timestamp && fillDeadline <= block.timestamp + MAX_ORDER_LIFETIME, InvalidDeadline(fillDeadline));
         bytes memory orderData = abi.encode(ERC20BridgeOrder({
@@ -51,7 +51,8 @@ contract RollupSettler is DepositContract {
                 recipient: recipient,
                 amountIn: amountIn,
                 amountOutMin: minAmountOut,
-                nonce: depositCount
+                nonce: depositCount,
+                resolver: resolver
             }));
         bytes32 orderHash = getLeafHash(fillDeadline, keccak256("ERC20BridgeOrder"), orderData);
         orderRoot = _deposit(orderHash); // depositCount gets incremented here
@@ -59,7 +60,7 @@ contract RollupSettler is DepositContract {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
     }
 
-    function fulfil(uint32 fillDeadline, IERC20 fromToken, IERC20 toToken, address sender, address recipient, uint256 amountIn, uint256 minAmountOut, uint256 source, uint32 orderNonce, bytes32[_DEPOSIT_CONTRACT_TREE_DEPTH] calldata smtProof) external {
+    function fulfil(uint32 fillDeadline, IERC20 fromToken, IERC20 toToken, address sender, address recipient, uint256 amountIn, uint256 minAmountOut, uint256 source, uint32 orderNonce, address resolver, bytes32[_DEPOSIT_CONTRACT_TREE_DEPTH] calldata smtProof) external {
         require(authorizedRollups[source], UnauthorizedRollup(source));
         require(fillDeadline >= block.timestamp, OrderExpired(fillDeadline));
         bytes memory orderData = abi.encode(ERC20BridgeOrder({
@@ -71,7 +72,8 @@ contract RollupSettler is DepositContract {
                 recipient: recipient,
                 amountIn: amountIn,
                 amountOutMin: minAmountOut,
-                nonce: orderNonce
+                nonce: orderNonce,
+                resolver: resolver
         }));
         bytes32 orderHash = getLeafHash(fillDeadline, keccak256("ERC20BridgeOrder"), orderData);
         require(verifyMerkleProof(orderHash, smtProof, orderNonce, orderRoots[source]), InvalidOrder(orderHash));
