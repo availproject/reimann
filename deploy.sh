@@ -25,10 +25,13 @@ cleanup() {
     sleep 0.5
     pkill -f smt-server
     sleep 0.5
+    pkill -f solver
+    sleep 0.5
 
     pkill -9 -f da-exex
     pkill -9 -f da-server
     pkill -9 -f smt-server
+    pkill -9 -f solver
     sleep 0.5
     
     rm -rf logs
@@ -96,6 +99,13 @@ sleep 7
 # Run full init
 echo "🏃 Running full Reimann initialization..."
 cargo run --bin cli test full init
+
+sleep 2
+
+echo "🧮 Starting solver..."
+cargo run --bin cli run solver > logs/solver.log 2>&1 &
+pids+=($!)
+echo "ℹ️ Solver started with PID: ${pids[5]}"
 
 sleep 2
 

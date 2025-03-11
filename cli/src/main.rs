@@ -98,6 +98,12 @@ enum RunCommands {
     )]
     Smt,
 
+    #[command(
+        about = "Run the solver",
+        long_about = "Start the solver server"
+    )]
+    Solver,
+
     /// Run rollup node
     #[command(
         about = "Run a rollup node",
@@ -779,6 +785,18 @@ fn run_smt() -> Result<()> {
     Ok(())
 }
 
+fn run_solver() -> Result<()> {
+    Command::new("cargo")
+        .args(["run", "--bin", "solver"])
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .context("Failed to start solver server")?
+        .wait()
+        .context("Failed to wait for solver server")?;
+    Ok(())
+}
+
 fn run_rollup(name: &str, port: u16, p2p_port: u16, authrpc_port: u16) -> Result<()> {
     Command::new("cargo")
         .args([
@@ -994,6 +1012,7 @@ async fn main() -> Result<()> {
         Commands::Run { component } => match component {
             RunCommands::Da => run_da()?,
             RunCommands::Smt => run_smt()?,
+            RunCommands::Solver => run_solver()?,
             RunCommands::Rollup {
                 name,
                 port,
